@@ -15,79 +15,117 @@
  */
 
 extern crate clap;
-use clap::{crate_version, value_t, values_t, App, Arg};
-// use std::vec::Vec;
+#[macro_use]
+extern crate lazy_static;
+extern crate log;
+
+use clap::{crate_authors, crate_version, value_t, values_t, App, Arg};
+use solver::grid::Grid;
+use std::fs;
+
+mod solver;
+
+// Maximum difficulty level found on solving.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub enum Level {
+    Easy,
+    Medium,
+    Hard,
+    Ridiculous,
+    Insane,
+}
 
 fn main() {
-    println!("BUILDINFO: {}", env!("BUILDINFO"));
-    
+    env_logger::init();
+
     let matches = App::new("Sudoku Generator")
         .version(crate_version!())
-        .author("G. Ralph Kuntz, MD <grk@usa.net>")
+        .author(crate_authors!())
         .about("Generate sudoku puzzles")
         .arg(
-            Arg::with_name("input")
+            Arg::with_name("inputs")
                 .short("i")
-                .long("input")
+                .long("inputs")
                 .value_name("FILE")
-                .help("Read a standard-format sudoku puzzle initial layout")
                 .takes_value(true)
-                .multiple(true),
+                .multiple(true)
+                .help("Read standard-format sudoku puzzle initial layout files"),
         )
         .arg(
-            Arg::with_name("level 0")
+            Arg::with_name("level0")
                 .short("0")
-                .long("easy")
+                .long("easy")       
                 .value_name("COUNT")
-                .help("Number of easy puzzles to generate")
-                .takes_value(true),
+                .takes_value(true)
+                .help("Number of easy puzzles to generate"),
         )
         .arg(
-            Arg::with_name("level 1")
+            Arg::with_name("level1")
                 .short("1")
                 .long("medium")
                 .value_name("COUNT")
-                .help("Number of medium puzzles to generate")
-                .takes_value(true),
+                .takes_value(true)
+                .help("Number of medium puzzles to generate"),
         )
         .arg(
-            Arg::with_name("level 2")
+            Arg::with_name("level2")
                 .short("2")
                 .long("hard")
                 .value_name("COUNT")
-                .help("Number of hard puzzles to generate")
-                .takes_value(true),
+                .takes_value(true)
+                .help("Number of hard puzzles to generate"),
         )
         .arg(
-            Arg::with_name("level 3")
+            Arg::with_name("level3")
                 .short("3")
                 .long("ridiculous")
                 .value_name("COUNT")
-                .help("Number of ridiculous puzzles to generate")
-                .takes_value(true),
+                .takes_value(true)
+                .help("Number of ridiculous puzzles to generate"),
         )
         .arg(
-            Arg::with_name("level 4")
+            Arg::with_name("level4")
                 .short("4")
                 .long("insane")
                 .value_name("COUNT")
-                .help("Number of insane puzzles to generate")
-                .takes_value(true),
+                .takes_value(true)
+                .help("Number of insane puzzles to generate"),
+        )
+        .after_help(
+            format!(
+                "build timestamp: {}\ngit hash: {}",
+                env!("BUILD_TIMESTAMP"),
+                env!("GIT_HASH")
+            )
+            .as_str(),
         )
         .get_matches();
 
-    let level_0_count = value_t!(matches, "level 0", u32).unwrap_or(0);
-    let level_1_count = value_t!(matches, "level 1", u32).unwrap_or(0);
-    let level_2_count = value_t!(matches, "level 2", u32).unwrap_or(0);
-    let level_3_count = value_t!(matches, "level 3", u32).unwrap_or(0);
-    let level_4_count = value_t!(matches, "level 4", u32).unwrap_or(0);
-    
-    let inputs = values_t!(matches, "input", String).unwrap_or_else(|_e| Vec::new());
+    let level_0_count = value_t!(matches, "level0", u32).unwrap_or(0);
+    let level_1_count = value_t!(matches, "level1", u32).unwrap_or(0);
+    let level_2_count = value_t!(matches, "level2", u32).unwrap_or(0);
+    let level_3_count = value_t!(matches, "level3", u32).unwrap_or(0);
+    let level_4_count = value_t!(matches, "level4", u32).unwrap_or(0);
+    let inputs = values_t!(matches, "inputs", String).unwrap_or_else(|_e| Vec::new());
 
-    println!("level 0 count: {}", level_0_count);
-    println!("level 1 count: {}", level_1_count);
-    println!("level 2 count: {}", level_2_count);
-    println!("level 3 count: {}", level_3_count);
-    println!("level 4 count: {}", level_4_count);
-    println!("inputs: {:?}", inputs);
+    if inputs.len() > 0 {
+        for input in inputs {
+            let lines = fs::read_to_string(&input);
+            match lines {
+                Ok(lines) => {
+                    for line in lines.lines() {
+                        println!("Encoded: {}", line);
+                        let (_level, _solved) = Grid::parse_grid(&line).solve();
+                    }
+                }
+                Err(_) => eprintln!("cannot open \"{}\" for reading", &input),
+            }
+        }
+    } else {
+        println!("level 0 count: {}", level_0_count);
+        println!("level 1 count: {}", level_1_count);
+        println!("level 2 count: {}", level_2_count);
+        println!("level 3 count: {}", level_3_count);
+        println!("level 4 count: {}", level_4_count);
+    }
 }
