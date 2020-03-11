@@ -40,6 +40,7 @@ mod hidden_triple;
 mod naked_pair;
 mod naked_single;
 mod naked_triple;
+mod pointing_line;
 
 const ALL_DIGITS: RangeInclusive<usize> = RangeInclusive::new(1, 9);
 
@@ -243,6 +244,7 @@ impl Grid {
                     Grid::hidden_pair,
                     Grid::hidden_triple,
                     Grid::hidden_quad,
+                    Grid::pointing_line,
                 ],
             ) {
                 continue;
