@@ -32,6 +32,7 @@ use colored::Colorize;
 use std::ops::RangeInclusive;
 use std::ops::{Index, IndexMut};
 
+mod box_line;
 mod cell;
 mod hidden_pair;
 mod hidden_quad;
@@ -61,7 +62,11 @@ const VERT_BAR: &str = "\u{2502}";
 
 lazy_static! {
     static ref BOX: Group = {
-        let mut cells = [[(0, 0); ROWS]; COLS];
+        fn box_of(r: usize, c: usize) -> usize {
+            r / 3 * 3 + c / 3
+        }
+
+        let mut cells = [[(0, 0); COLS]; ROWS];
         for r in 0..ROWS {
             for c in 0..COLS {
                 let p = (r, c);
@@ -74,7 +79,7 @@ lazy_static! {
         }
     };
     static ref COL: Group = {
-        let mut cells = [[(0, 0); ROWS]; COLS];
+        let mut cells = [[(0, 0); COLS]; ROWS];
         for r in 0..ROWS {
             for c in 0..COLS {
                 let p = (r, c);
@@ -103,8 +108,8 @@ lazy_static! {
 
 #[derive(Debug)]
 pub struct Grid {
-    pub orig: [[bool; ROWS]; COLS],
-    pub cells: [[Cell; ROWS]; COLS],
+    pub orig: [[bool; COLS]; ROWS],
+    pub cells: [[Cell; COLS]; ROWS],
 }
 
 impl Grid {
@@ -203,8 +208,8 @@ impl Grid {
     pub fn parse_grid(input: &str) -> Grid {
         let bytes = input.as_bytes();
         const ALL: u16 = 0b_111111111_0;
-        let mut orig: [[bool; ROWS]; COLS] = Default::default();
-        let mut cells = [[Cell(0); ROWS]; COLS];
+        let mut orig: [[bool; COLS]; ROWS] = Default::default();
+        let mut cells = [[Cell(0); COLS]; ROWS];
         for r in 0..ROWS {
             for c in 0..COLS {
                 let chr = bytes[r * 9 + c];
@@ -245,6 +250,7 @@ impl Grid {
                     Grid::hidden_triple,
                     Grid::hidden_quad,
                     Grid::pointing_line,
+                    Grid::box_line,
                 ],
             ) {
                 continue;
@@ -336,10 +342,6 @@ impl IndexMut<&Point> for Grid {
     fn index_mut<'a>(&'a mut self, p: &Point) -> &mut Cell {
         &mut self.cells[p.0][p.1]
     }
-}
-
-fn box_of(r: usize, c: usize) -> usize {
-    r / 3 * 3 + c / 3
 }
 
 // center centers a string in a field of the given size.
