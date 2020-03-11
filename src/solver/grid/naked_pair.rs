@@ -55,7 +55,7 @@ impl Grid {
                                 cell1.digits(),
                                 p3
                             );
-                            if log_enabled!(Level::Trace) {
+                            if log_enabled!(Level::Debug) {
                                 self.display();
                             }
                         }

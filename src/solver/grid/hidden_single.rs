@@ -39,7 +39,7 @@ impl Grid {
                             "in {} {} set {:?} to {}",
                             group.name, ci, p, d
                         );
-                        if log_enabled!(Level::Trace) {
+                        if log_enabled!(Level::Debug) {
                             self.display();
                         }
                     }

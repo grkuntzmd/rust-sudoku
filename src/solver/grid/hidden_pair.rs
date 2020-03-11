@@ -47,7 +47,7 @@ impl Grid {
                                     p,
                                     comb.digits()
                                 );
-                                if log_enabled!(Level::Trace) {
+                                if log_enabled!(Level::Debug) {
                                     self.display();
                                 }
                             }

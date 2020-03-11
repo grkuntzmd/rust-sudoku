@@ -21,9 +21,7 @@ macro_rules! op_other {
         pub fn $name(&mut $self_, $other: &Cell) -> bool {
             let prev = $self_.0;
             $body;
-            if $self_.0 == 0 {
-                panic!("empty cell: was: {:b}, other: {:b}, now: {:b}", prev, $other.0, $self_.0);
-            }
+            assert_ne!($self_.0, 0, "empty cell: was: {:b}, other: {:b}, now: {:b}", prev, $other.0, $self_.0);
             $self_.0 != prev
         }
     };
@@ -36,7 +34,7 @@ use std::ops::BitOr;
 pub struct Cell(pub u16);
 
 lazy_static! {
-    static ref BIT_COUNT: [u8; 1024] = {
+    pub static ref BIT_COUNT: [u8; 1024] = {
         let mut bits: [u8; 1024] = [0; 1024];
         for i in 0..1024 {
             // Use Brian Kernighan's algorithm to count bits set to 1.

@@ -26,20 +26,25 @@ macro_rules! group_loop {
 }
 
 use super::super::Level;
-use super::{Group, Point, COLS, ROWS};
-use cell::Cell;
+use super::{Group, Point, Unit};
+use cell::{Cell, BIT_COUNT};
 use colored::Colorize;
 use std::ops::RangeInclusive;
 use std::ops::{Index, IndexMut};
 
 mod cell;
 mod hidden_pair;
+mod hidden_quad;
 mod hidden_single;
+mod hidden_triple;
 mod naked_pair;
 mod naked_single;
 mod naked_triple;
 
 const ALL_DIGITS: RangeInclusive<usize> = RangeInclusive::new(1, 9);
+
+const ROWS: usize = 9;
+const COLS: usize = 9;
 
 const BOT_LEFT: &str = "\u{2514}";
 const BOT_RIGHT: &str = "\u{2518}";
@@ -147,8 +152,22 @@ impl Grid {
         );
     }
 
+    // digit_places returns an array of digits containing values where the bits (1 - 9) are set if the corresponding digit appears in that cell.
+    fn digit_places(&self, unit: &Unit) -> [u16; 10] {
+        let mut places = [0; 10];
+        for (pi, p) in unit.iter().enumerate() {
+            let cell = self[p];
+            for d in ALL_DIGITS {
+                if cell.0 & (1 << d) != 0 {
+                    places[d] |= 1 << pi;
+                }
+            }
+        }
+        places
+    }
+
     // digit_points builds a table of points that contain each digit.
-    fn digit_points(&self, unit: &[Point; 9]) -> [Vec<Point>; 10] {
+    fn digit_points(&self, unit: &Unit) -> [Vec<Point>; 10] {
         let mut points: [Vec<Point>; 10] = Default::default();
         for p in unit {
             let val = self[p];
@@ -222,6 +241,8 @@ impl Grid {
                     Grid::naked_pair,
                     Grid::naked_triple,
                     Grid::hidden_pair,
+                    Grid::hidden_triple,
+                    Grid::hidden_quad,
                 ],
             ) {
                 continue;
@@ -322,4 +343,8 @@ fn box_of(r: usize, c: usize) -> usize {
 // center centers a string in a field of the given size.
 fn center(s: &str, width: usize) -> String {
     format!("{:^width$}", s, width = width)
+}
+
+fn count<T: Into<usize>>(val: T) -> u8 {
+    BIT_COUNT[val.into() as usize]
 }

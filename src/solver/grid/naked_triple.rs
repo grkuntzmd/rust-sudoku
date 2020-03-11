@@ -83,7 +83,7 @@ impl Grid {
                                     comb.digits(),
                                     p
                                 );
-                                if log_enabled!(Level::Trace) {
+                                if log_enabled!(Level::Debug) {
                                     self.display();
                                 }
                             }

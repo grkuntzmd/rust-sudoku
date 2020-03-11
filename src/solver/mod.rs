@@ -16,12 +16,10 @@
 
 pub mod grid;
 
-const ROWS: usize = 9;
-const COLS: usize = 9;
-
 pub struct Group {
     pub name: String,
-    pub cells: [[Point; ROWS]; COLS],
+    pub cells: [Unit; 9],
 }
 
 pub type Point = (usize, usize);
+type Unit = [Point; 9];
