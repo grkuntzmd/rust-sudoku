@@ -46,7 +46,7 @@ impl Grid {
                             group.name,
                             ci,
                             p1,
-                            val.digits(),
+                            val.to_string(),
                             p2
                         );
                         if log_enabled!(Level::Trace) {

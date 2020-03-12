@@ -21,7 +21,7 @@ macro_rules! op_other {
         pub fn $name(&mut $self_, $other: &Cell) -> bool {
             let prev = $self_.0;
             $body;
-            assert_ne!($self_.0, 0, "empty cell: was: {:b}, other: {:b}, now: {:b}", prev, $other.0, $self_.0);
+            // assert_ne!($self_.0, 0, "empty cell: was: {:b}, other: {:b}, now: {:b}", prev, $other.0, $self_.0);
             $self_.0 != prev
         }
     };
@@ -55,14 +55,14 @@ impl Cell {
         BIT_COUNT[usize::from(self.0)] as usize
     }
 
-    pub fn digits(&self) -> String {
-        let mut d = Vec::<String>::new();
+    pub fn digits(&self) -> Vec<usize> {
+        let mut d = Vec::new();
         for i in ALL_DIGITS {
             if self.0 & (1 << i) != 0 {
-                d.push(i.to_string());
+                d.push(i);
             }
         }
-        d.join(", ")
+        d
     }
 
     op_other!(and, self, other, self.0 &= other.0);
@@ -77,5 +77,17 @@ impl BitOr for Cell {
 
     fn bitor(self, rhs: Self) -> Self {
         Cell(self.0 | rhs.0)
+    }
+}
+
+impl ToString for Cell {
+    fn to_string(&self) -> String {
+        let mut d = Vec::<String>::new();
+        for i in ALL_DIGITS {
+            if self.0 & (1 << i) != 0 {
+                d.push(i.to_string());
+            }
+        }
+        d.join(", ")
     }
 }

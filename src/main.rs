@@ -20,7 +20,7 @@ extern crate lazy_static;
 extern crate log;
 
 use clap::{crate_authors, crate_version, value_t, values_t, App, Arg};
-use solver::grid::Grid;
+use solver::grid::{search, Grid, Solution};
 use std::fs;
 
 mod solver;
@@ -54,7 +54,7 @@ fn main() {
         .arg(
             Arg::with_name("level0")
                 .short("0")
-                .long("easy")       
+                .long("easy")
                 .value_name("COUNT")
                 .takes_value(true)
                 .help("Number of easy puzzles to generate"),
@@ -109,18 +109,49 @@ fn main() {
     let inputs = values_t!(matches, "inputs", String).unwrap_or_else(|_e| Vec::new());
 
     if inputs.len() > 0 {
+        let mut all = 0;
+        let mut sol = 0;
         for input in inputs {
             let lines = fs::read_to_string(&input);
             match lines {
                 Ok(lines) => {
                     for line in lines.lines() {
+                        all += 1;
                         println!("Encoded: {}", line);
-                        let (_level, _solved) = Grid::parse_grid(&line).solve();
+                        let mut grid = Grid::parse_grid(&line);
+                        grid.display();
+                        let (level, solved) = grid.reduce();
+                        grid.display();
+                        println!(
+                            "{:?}: {}",
+                            level,
+                            if solved { "solved" } else { "not solved" }
+                        );
+
+                        if !solved {
+                            println!("Searching");
+                            match search(&grid, None) {
+                                Solution::NotFound => println!("No solution"),
+                                Solution::Single(grid) => {
+                                    grid.display();
+                                    println!("solved by search");
+                                    sol += 1;
+                                }
+                                Solution::Multiple(sol1, sol2) => {
+                                    sol1.display();
+                                    sol2.display();
+                                    println!("Multiple solution");
+                                },
+                            }
+                        } else {
+                            sol += 1;
+                        }
                     }
                 }
                 Err(_) => eprintln!("cannot open \"{}\" for reading", &input),
             }
         }
+        println!("solved {} of {}", sol, all);
     } else {
         println!("level 0 count: {}", level_0_count);
         println!("level 1 count: {}", level_1_count);

@@ -52,7 +52,7 @@ impl Grid {
                                 "in {} {} removed {} from {:?}",
                                 group.name,
                                 ci,
-                                cell1.digits(),
+                                cell1.to_string(),
                                 p3
                             );
                             if log_enabled!(Level::Debug) {

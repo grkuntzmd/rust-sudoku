@@ -37,6 +37,9 @@ impl Grid {
 
             // Loop through the digits and determine if all of them are on the same line (col or row). If so, then all other cells in that line that are not in the current box can have those digits removed.
             'outer: for d in ALL_DIGITS {
+                if points[d].len() == 0 {
+                    return false;
+                }
                 let a = axis(&points[d][0]);
                 for p in points[d][1..].iter() {
                     if axis(p) != a {

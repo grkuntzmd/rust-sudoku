@@ -79,7 +79,7 @@ impl Grid {
                                             group.name,
                                             ci,
                                             p,
-                                            bits.digits()
+                                            bits.to_string()
                                         );
                                         if log_enabled!(Level::Debug) {
                                             self.display();

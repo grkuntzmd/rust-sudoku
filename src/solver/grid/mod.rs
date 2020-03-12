@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+macro_rules! for_all_cells {
+    ($r: ident, $c: ident, $body:tt) => {
+        for $r in 0..ROWS {
+            for $c in 0..COLS {
+                $body
+            }
+        }
+    };
+}
+
 macro_rules! group_loop {
     ($self_:ident, $res:ident, $group:ident, $ci:ident, $c:ident, $body:tt) => {{
         let mut $res = false;
@@ -67,12 +77,10 @@ lazy_static! {
         }
 
         let mut cells = [[(0, 0); COLS]; ROWS];
-        for r in 0..ROWS {
-            for c in 0..COLS {
-                let p = (r, c);
-                cells[box_of(r, c)][r % 3 * 3 + c % 3] = p;
-            }
-        }
+        for_all_cells!(r, c, {
+            let p = (r, c);
+            cells[box_of(r, c)][r % 3 * 3 + c % 3] = p;
+        });
         Group {
             name: "box".to_string(),
             cells,
@@ -80,12 +88,10 @@ lazy_static! {
     };
     static ref COL: Group = {
         let mut cells = [[(0, 0); COLS]; ROWS];
-        for r in 0..ROWS {
-            for c in 0..COLS {
-                let p = (r, c);
-                cells[c][r] = p;
-            }
-        }
+        for_all_cells!(r, c, {
+            let p = (r, c);
+            cells[c][r] = p;
+        });
         Group {
             name: "col".to_string(),
             cells,
@@ -93,12 +99,10 @@ lazy_static! {
     };
     static ref ROW: Group = {
         let mut cells = [[(0, 0); ROWS]; COLS];
-        for r in 0..ROWS {
-            for c in 0..COLS {
-                let p = (r, c);
-                cells[r][c] = p;
-            }
-        }
+        for_all_cells!(r, c, {
+            let p = (r, c);
+            cells[r][c] = p;
+        });
         Group {
             name: "row".to_string(),
             cells,
@@ -106,10 +110,18 @@ lazy_static! {
     };
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Grid {
     pub orig: [[bool; COLS]; ROWS],
-    pub cells: [[Cell; COLS]; ROWS],
+    pub cells: Cells,
+}
+
+type Cells = [[Cell; COLS]; ROWS];
+
+pub enum Solution {
+    NotFound,
+    Single(Grid),
+    Multiple(Grid, Grid),
 }
 
 impl Grid {
@@ -120,12 +132,20 @@ impl Grid {
         let line = LEFT_T.to_string()
             + &[bars.as_str(), bars.as_str(), bars.as_str()].join(PLUS)
             + RIGHT_T;
+        print!("\t   ");
+        for d in 0..9 {
+            print!("{}", center(&d.to_string(), width).yellow());
+            if d == 2 || d == 5 {
+                print!(" ");
+            }
+        }
+        println!();
         println!(
-            "\t{}{}{}{}{}{}{}",
+            "\t  {}{}{}{}{}{}{}",
             TOP_LEFT, &bars, TOP_T, &bars, TOP_T, &bars, TOP_RIGHT
         );
         for r in 0..ROWS {
-            print!("\t\u{2502}");
+            print!("\t{} \u{2502}", r.to_string().yellow());
             for c in 0..COLS {
                 let mut s = String::new();
                 for i in ALL_DIGITS {
@@ -149,11 +169,11 @@ impl Grid {
             }
             println!("{}", VERT_BAR);
             if r == 2 || r == 5 {
-                println!("\t{}", line);
+                println!("\t  {}", line);
             }
         }
         println!(
-            "\t{}{}{}{}{}{}{}",
+            "\t  {}{}{}{}{}{}{}",
             BOT_LEFT, &bars, BOT_T, &bars, BOT_T, &bars, BOT_RIGHT
         );
     }
@@ -187,20 +207,27 @@ impl Grid {
         points
     }
 
+    fn empty_cell(&self) -> bool {
+        for_all_cells!(r, c, {
+            if self.cells[r][c].0 == 0 {
+                return true;
+            }
+        });
+        false
+    }
+
     // max_width calculates the maximum width that any cell in the grid takes to display. A grid containing all of the digits ("123456789") will display as a single dot (".") and so has a width of 1.
     fn max_width(&self) -> usize {
         let mut width = 0;
-        for r in 0..ROWS {
-            for c in 0..COLS {
-                let mut count = self.cells[r][c].count();
-                if count == 9 {
-                    count = 1;
-                }
-                if width < count {
-                    width = count;
-                }
+        for_all_cells!(r, c, {
+            let mut count = self.cells[r][c].count();
+            if count == 9 {
+                count = 1;
             }
-        }
+            if width < count {
+                width = count;
+            }
+        });
         width
     }
 
@@ -210,35 +237,37 @@ impl Grid {
         const ALL: u16 = 0b_111111111_0;
         let mut orig: [[bool; COLS]; ROWS] = Default::default();
         let mut cells = [[Cell(0); COLS]; ROWS];
-        for r in 0..ROWS {
-            for c in 0..COLS {
-                let chr = bytes[r * 9 + c];
-                if chr == b'.' {
-                    cells[r][c].0 |= ALL;
-                } else {
-                    let digit: u16 = match atoi::ascii_to_digit(chr) {
-                        Some(digit) => digit,
-                        None => panic!("illegal character in input grid: {} (\"{}\")", &input, chr),
-                    };
-                    orig[r][c] = true;
-                    cells[r][c].0 |= 1 << digit;
-                }
+        for_all_cells!(r, c, {
+            let chr = bytes[r * 9 + c];
+            if chr == b'.' {
+                cells[r][c].0 |= ALL;
+            } else {
+                let digit: u16 = match atoi::ascii_to_digit(chr) {
+                    Some(digit) => digit,
+                    None => panic!("illegal character in input grid: {} (\"{}\")", &input, chr),
+                };
+                orig[r][c] = true;
+                cells[r][c].0 |= 1 << digit;
             }
-        }
-
+        });
         Grid {
             orig: orig,
             cells: cells,
         }
     }
 
-    // Solve solves the current grid of the given game.
-    pub fn solve(&mut self) -> (Level, bool) {
-        self.display();
+    // reduce reduces all cells to the minimum number of candidates using only logical operations (no brute-froce search) and returns the highest level of operation used and a flag indicating if the puzzle is solved.
+    pub fn reduce(&mut self) -> (Level, bool) {
+        if self.empty_cell() {
+            return (Level::Easy, false);
+        }
 
         let mut max_level = Level::Easy;
-        while !self.validate() {
-            if self.solve_level(
+        loop {
+            if self.solved() {
+                return (max_level, true);
+            }
+            if self.reduce_level(
                 &mut max_level,
                 &Level::Easy,
                 vec![
@@ -255,31 +284,25 @@ impl Grid {
             ) {
                 continue;
             }
-            if self.solve_level(&mut max_level, &Level::Medium, vec![]) {
+            if self.reduce_level(&mut max_level, &Level::Medium, vec![]) {
                 continue;
             }
-            if self.solve_level(&mut max_level, &Level::Hard, vec![]) {
+            if self.reduce_level(&mut max_level, &Level::Hard, vec![]) {
                 continue;
             }
-            if self.solve_level(&mut max_level, &Level::Ridiculous, vec![]) {
+            if self.reduce_level(&mut max_level, &Level::Ridiculous, vec![]) {
                 continue;
             }
-            if self.solve_level(&mut max_level, &Level::Insane, vec![]) {
+            if self.reduce_level(&mut max_level, &Level::Insane, vec![]) {
                 continue;
             }
             break;
         }
 
-        let valid = self.validate();
-        if !valid {
-            println!("Not solved");
-        }
-        self.display();
-        println!("{:?}", max_level);
-        (max_level, valid)
+        (max_level, false)
     }
 
-    pub fn solve_level(
+    pub fn reduce_level(
         &mut self,
         max_level: &mut Level,
         level: &Level,
@@ -296,21 +319,16 @@ impl Grid {
         false
     }
 
-    fn validate(&self) -> bool {
-        self.validate_group(&BOX) && self.validate_group(&COL) && self.validate_group(&ROW)
+    fn solved(&self) -> bool {
+        self.solved_group(&BOX) && self.solved_group(&COL) && self.solved_group(&ROW)
     }
 
-    fn validate_group(&self, group: &Group) -> bool {
+    fn solved_group(&self, group: &Group) -> bool {
         for c in &group.cells {
             let mut cells = [0; 10];
             for p in c {
                 let val = self[p];
-                let bits = val.count();
-                if bits == 0 {
-                    self.display();
-                    panic!("Empty cell");
-                }
-                if self.orig[p.0][p.1] && bits > 1 {
+                if self.orig[p.0][p.1] && val.count() > 1 {
                     panic!("Changed original cell: ({}, {}): {:b}", p.0, p.1, val.0);
                 }
                 for d in ALL_DIGITS {
@@ -351,4 +369,61 @@ fn center(s: &str, width: usize) -> String {
 
 fn count<T: Into<usize>>(val: T) -> u8 {
     BIT_COUNT[val.into() as usize]
+}
+
+fn min_more_than_one_digit(grid: &Grid) -> Option<Point> {
+    let mut maybe_point = None;
+    let mut min = 10;
+
+    for_all_cells!(r, c, {
+        let cell = grid.cells[r][c];
+        let count = cell.count();
+        if count > 1 && count < min {
+            maybe_point = Some((r, c));
+            min = count;
+        }
+    });
+    maybe_point
+}
+
+pub fn search(grid: &Grid, other: Option<Grid>) -> Solution {
+    if grid.solved() {
+        if let Some(sol) = other {
+            return Solution::Multiple(*grid, sol);
+        }
+        return Solution::Single(*grid);
+    }
+    if grid.empty_cell() {
+        return Solution::NotFound;
+    }
+
+    let point = min_more_than_one_digit(grid).expect("no unsolved cells found");
+    let mut solution = other;
+    for d in grid[&point].digits() {
+        let mut copy = grid.clone();
+        copy[&point] = Cell(1 << d);
+        let (_, solved) = copy.reduce();
+        if solved {
+            if let Some(sol) = solution {
+                return Solution::Multiple(sol, copy);
+            }
+            solution = Some(copy.clone());
+            continue;
+        }
+        match search(&copy, solution) {
+            Solution::NotFound => continue,
+            Solution::Single(other) => match solution {
+                Some(sol) => return Solution::Multiple(sol, other),
+                None => {
+                    solution = Some(other);
+                    continue;
+                }
+            },
+            result @ Solution::Multiple(_, _) => return result,
+        }
+    }
+    match solution {
+        Some(sol) => Solution::Single(sol),
+        None => Solution::NotFound,
+    }
 }

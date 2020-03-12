@@ -45,7 +45,7 @@ impl Grid {
                                     group.name,
                                     ci,
                                     p,
-                                    comb.digits()
+                                    comb.to_string()
                                 );
                                 if log_enabled!(Level::Debug) {
                                     self.display();
