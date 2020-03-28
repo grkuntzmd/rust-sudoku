@@ -47,17 +47,7 @@ impl Grid {
                         }
 
                         if self[p3].and_not(&cell1) {
-                            res = true;
-                            info!(
-                                "in {} {} removed {} from {:?}",
-                                group.name,
-                                ci,
-                                cell1.to_string(),
-                                p3
-                            );
-                            if log_enabled!(Level::Debug) {
-                                self.display();
-                            }
+                            cell_change!(self, res, "in {} {} removed {} from {:?}", group.name, ci, cell1.to_string(), p3);
                         }
                     }
                     continue 'outer;

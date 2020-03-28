@@ -40,18 +40,7 @@ impl Grid {
                     }
 
                     if self[p2].and_not(&cell) {
-                        res = true;
-                        info!(
-                            "in {} {} cell {:?} allows only {}, removed from {:?}",
-                            group.name,
-                            ci,
-                            p1,
-                            cell.to_string(),
-                            p2
-                        );
-                        if log_enabled!(Level::Trace) {
-                            self.display();
-                        }
+                        cell_change!(self, res, "in {} {} cell {:?} allows only {}, removed from {:?}", group.name, ci, p1, cell.to_string(), p2);
                     }
                 }
             }

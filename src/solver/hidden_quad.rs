@@ -73,17 +73,7 @@ impl Grid {
                             for (pi, p) in c.iter().enumerate() {
                                 if comb & (1 << pi) != 0 {
                                     if self[p].and(&bits) {
-                                        res = true;
-                                        info!(
-                                            "in {} {} limits {:?} to {}",
-                                            group.name,
-                                            ci,
-                                            p,
-                                            bits.to_string()
-                                        );
-                                        if log_enabled!(Level::Debug) {
-                                            self.display();
-                                        }
+                                        cell_change!(self, res, "in {} {} limits {:?} to {}", group.name, ci, p, bits.to_string());
                                     }
                                 }
                             }

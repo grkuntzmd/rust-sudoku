@@ -72,20 +72,7 @@ impl Grid {
                             }
 
                             if self[p].and_not(&comb) {
-                                res = true;
-                                info!(
-                                    "in {} {} ({:?}, {:?}, {:?}) removing {} from {:?}",
-                                    group.name,
-                                    ci,
-                                    p1,
-                                    p2,
-                                    p3,
-                                    comb.to_string(),
-                                    p
-                                );
-                                if log_enabled!(Level::Debug) {
-                                    self.display();
-                                }
+                                cell_change!(self, res, "in {} {} ({:?}, {:?}, {:?}) removing {} from {:?}", group.name, ci, p1, p2, p3, comb.to_string(), p);
                             }
                         }
                     }

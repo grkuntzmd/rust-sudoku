@@ -53,11 +53,7 @@ impl Grid {
                     }
 
                     if self[p].and_not(&Cell(1 << d)) {
-                        res = true;
-                        info!("in box {} removing {} from {:?} along {}", bi, d, p, group);
-                        if log_enabled!(Level::Debug) {
-                            self.display();
-                        }
+                        cell_change!(self, res, "in box {} removing {} from {:?} along {}", bi, d, p, group);
                     }
                 }
             }

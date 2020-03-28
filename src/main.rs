@@ -37,8 +37,6 @@ pub enum Level {
     Extreme,
 }
 
-static mut COLORIZE: bool = false;
-
 fn main() {
     env_logger::init();
 
@@ -103,12 +101,6 @@ fn main() {
                 .takes_value(true)
                 .help("Number of attempts to generate a puzzle"),
         )
-        .arg(
-            Arg::with_name("colorize")
-                .short("c")
-                .long("colorize")
-                .help("Colorize the output using ANSI escapes"),
-        )
         .after_help(
             format!(
                 "build timestamp: {}\ngit hash: {}",
@@ -126,9 +118,6 @@ fn main() {
     // let level_4_count = value_t!(matches, "level4", u32).unwrap_or(0);
     let inputs = values_t!(matches, "inputs", String).unwrap_or_else(|_e| Vec::new());
     let max_attempts = value_t!(matches, "attempts", u32).unwrap_or(100);
-    unsafe {
-        COLORIZE = value_t!(matches, "colorize", bool).unwrap_or(false);
-    }
 
     if inputs.len() > 0 {
         // Handle -i files.

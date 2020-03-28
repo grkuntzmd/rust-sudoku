@@ -64,18 +64,7 @@ impl Grid {
                     }
 
                     if self[&p].and_not(&Cell(1 << d)) {
-                        res = true;
-                        info!(
-                            "all {}'s in {} {} appear in box {} removing from {:?}",
-                            d,
-                            group.name,
-                            ci,
-                            box_sel(index, ci),
-                            p
-                        );
-                        if log_enabled!(Level::Debug) {
-                            self.display();
-                        }
+                        cell_change!(self, res, "all {}'s in {} {} appear in box {} removing from {:?}", d, group.name, ci, box_sel(index, ci), p);
                     }
                 }
             }

@@ -35,6 +35,16 @@ macro_rules! group_loop {
     }};
 }
 
+macro_rules! cell_change {
+    ($self_:ident, $res:ident, $($print:expr),+) => {
+        $res = true;
+        info!($($print),+);
+        if log_enabled!(Level::Debug) {
+            $self_.display();
+        }
+    };
+}
+
 extern crate rand;
 
 use super::Level;
@@ -57,6 +67,7 @@ mod naked_pair;
 mod naked_single;
 mod naked_triple;
 mod pointing_line;
+mod x_wing;
 
 const ALL_DIGITS: RangeInclusive<usize> = RangeInclusive::new(1, 9);
 
@@ -136,8 +147,8 @@ pub struct Game {
     pub level: Level,
     pub clues: u8,
     pub strategies: String,
-    pub puzzle: Box<Grid>,
-    pub solution: Box<Grid>,
+    pub puzzle: Grid,
+    pub solution: Grid,
 }
 
 impl Grid {
@@ -212,8 +223,8 @@ impl Grid {
                     level: *level,
                     clues: clues,
                     strategies: s.join(", "),
-                    puzzle: Box::<_>::new(grid),
-                    solution: Box::<_>::new(solution),
+                    puzzle: grid,
+                    solution: solution,
                 });
             }
         }
@@ -407,7 +418,12 @@ impl Grid {
             ) {
                 continue;
             }
-            if self.reduce_level(&mut max_level, &Level::Standard, strategies, vec![]) {
+            if self.reduce_level(
+                &mut max_level,
+                &Level::Standard,
+                strategies,
+                vec![(Grid::x_wing, "x_wing")],
+            ) {
                 continue;
             }
             if self.reduce_level(&mut max_level, &Level::Hard, strategies, vec![]) {
