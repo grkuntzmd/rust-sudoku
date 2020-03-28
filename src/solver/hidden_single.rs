@@ -35,10 +35,7 @@ impl Grid {
                     let p = points[d][0];
                     if self[&p].replace(&Cell(1 << d)) {
                         res = true;
-                        info!(
-                            "in {} {} set {:?} to {}",
-                            group.name, ci, p, d
-                        );
+                        info!("in {} {} set {:?} to {}", group.name, ci, p, d);
                         if log_enabled!(Level::Debug) {
                             self.display();
                         }

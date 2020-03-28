@@ -29,8 +29,8 @@ impl Grid {
     fn naked_single_group(&mut self, group: &Group) -> bool {
         group_loop!(self, res, group, ci, c, {
             for p1 in c {
-                let val = self[p1];
-                if val.count() != 1 {
+                let cell = self[p1];
+                if cell.count() != 1 {
                     continue;
                 }
 
@@ -39,14 +39,14 @@ impl Grid {
                         continue;
                     }
 
-                    if self[p2].and_not(&val) {
+                    if self[p2].and_not(&cell) {
                         res = true;
                         info!(
                             "in {} {} cell {:?} allows only {}, removed from {:?}",
                             group.name,
                             ci,
                             p1,
-                            val.to_string(),
+                            cell.to_string(),
                             p2
                         );
                         if log_enabled!(Level::Trace) {

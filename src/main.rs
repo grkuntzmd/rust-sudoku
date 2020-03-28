@@ -20,7 +20,9 @@ extern crate lazy_static;
 extern crate log;
 
 use clap::{crate_authors, crate_version, value_t, values_t, App, Arg};
-use solver::grid::{search, Grid, Solution};
+use rayon::prelude::*;
+use solver::Grid;
+use std::collections::HashSet;
 use std::fs;
 
 mod solver;
@@ -29,11 +31,13 @@ mod solver;
 #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub enum Level {
     Easy,
-    Medium,
+    Standard,
     Hard,
-    Ridiculous,
-    Insane,
+    Expert,
+    Extreme,
 }
+
+static mut COLORIZE: bool = false;
 
 fn main() {
     env_logger::init();
@@ -62,10 +66,10 @@ fn main() {
         .arg(
             Arg::with_name("level1")
                 .short("1")
-                .long("medium")
+                .long("standard")
                 .value_name("COUNT")
                 .takes_value(true)
-                .help("Number of medium puzzles to generate"),
+                .help("Number of standard puzzles to generate"),
         )
         .arg(
             Arg::with_name("level2")
@@ -78,18 +82,32 @@ fn main() {
         .arg(
             Arg::with_name("level3")
                 .short("3")
-                .long("ridiculous")
+                .long("expert")
                 .value_name("COUNT")
                 .takes_value(true)
-                .help("Number of ridiculous puzzles to generate"),
+                .help("Number of expert puzzles to generate"),
         )
         .arg(
             Arg::with_name("level4")
                 .short("4")
-                .long("insane")
+                .long("extreme")
                 .value_name("COUNT")
                 .takes_value(true)
-                .help("Number of insane puzzles to generate"),
+                .help("Number of extreme puzzles to generate"),
+        )
+        .arg(
+            Arg::with_name("attempts")
+                .short("a")
+                .long("attempts")
+                .value_name("ATTEMPTS")
+                .takes_value(true)
+                .help("Number of attempts to generate a puzzle"),
+        )
+        .arg(
+            Arg::with_name("colorize")
+                .short("c")
+                .long("colorize")
+                .help("Colorize the output using ANSI escapes"),
         )
         .after_help(
             format!(
@@ -105,10 +123,15 @@ fn main() {
     let level_1_count = value_t!(matches, "level1", u32).unwrap_or(0);
     let level_2_count = value_t!(matches, "level2", u32).unwrap_or(0);
     let level_3_count = value_t!(matches, "level3", u32).unwrap_or(0);
-    let level_4_count = value_t!(matches, "level4", u32).unwrap_or(0);
+    // let level_4_count = value_t!(matches, "level4", u32).unwrap_or(0);
     let inputs = values_t!(matches, "inputs", String).unwrap_or_else(|_e| Vec::new());
+    let max_attempts = value_t!(matches, "attempts", u32).unwrap_or(100);
+    unsafe {
+        COLORIZE = value_t!(matches, "colorize", bool).unwrap_or(false);
+    }
 
     if inputs.len() > 0 {
+        // Handle -i files.
         let mut all = 0;
         let mut sol = 0;
         for input in inputs {
@@ -120,31 +143,37 @@ fn main() {
                         println!("Encoded: {}", line);
                         let mut grid = Grid::parse_grid(&line);
                         grid.display();
-                        let (level, solved) = grid.reduce();
-                        grid.display();
-                        println!(
-                            "{:?}: {}",
-                            level,
-                            if solved { "solved" } else { "not solved" }
-                        );
 
-                        if !solved {
-                            println!("Searching");
-                            match search(&grid, None) {
-                                Solution::NotFound => println!("No solution"),
-                                Solution::Single(grid) => {
-                                    grid.display();
-                                    println!("solved by search");
-                                    sol += 1;
-                                }
-                                Solution::Multiple(sol1, sol2) => {
-                                    sol1.display();
-                                    sol2.display();
-                                    println!("Multiple solution");
-                                },
-                            }
-                        } else {
+                        let mut strategies = HashSet::<&'static str>::new();
+                        let (max_level, solved) = grid.reduce(&mut Some(&mut strategies));
+                        grid.display();
+
+                        let mut names: Vec<&str> = strategies.into_iter().collect();
+                        names.sort();
+
+                        if solved {
                             sol += 1;
+                            println!("level: {:?}, solved, ({})", max_level, names.join(", "));
+                        } else {
+                            println!("level: {:?}, not solved ({})", max_level, names.join(", "));
+
+                            let mut solutions = Vec::<Grid>::new();
+                            grid.search(&mut solutions);
+
+                            match solutions.len() {
+                                0 => println!("still not solved after search"),
+                                1 => {
+                                    sol += 1;
+                                    println!("single solution found");
+                                    solutions[0].display();
+                                }
+                                _ => {
+                                    println!("multiple solutions found");
+                                    for s in solutions {
+                                        s.display();
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -153,10 +182,32 @@ fn main() {
         }
         println!("solved {} of {}", sol, all);
     } else {
-        println!("level 0 count: {}", level_0_count);
-        println!("level 1 count: {}", level_1_count);
-        println!("level 2 count: {}", level_2_count);
-        println!("level 3 count: {}", level_3_count);
-        println!("level 4 count: {}", level_4_count);
+        // Generate puzzles of levels given in -0, -1, -2, -3, -4.
+        let mut tasks = Vec::<Level>::new();
+
+        for _ in 0..level_0_count {
+            tasks.push(Level::Easy)
+        }
+        for _ in 0..level_1_count {
+            tasks.push(Level::Standard)
+        }
+        for _ in 0..level_2_count {
+            tasks.push(Level::Hard)
+        }
+        for _ in 0..level_3_count {
+            tasks.push(Level::Expert)
+        }
+        // for _ in 0..level_4_count { tasks.push(Level::Extreme)}
+
+        tasks
+            .par_iter()
+            .map(|l| Grid::generate(l, &max_attempts))
+            .for_each(|maybe_game| {
+                if let Some(game) = maybe_game {
+                    println!("{:?} ({}) {:?}", game.level, game.clues, game.strategies);
+                    game.puzzle.display();
+                    game.solution.display();
+                }
+            });
     }
 }
