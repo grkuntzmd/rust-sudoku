@@ -47,15 +47,7 @@ impl Grid {
                         }
 
                         if self[p3].and_not(&cell1) {
-                            cell_change!(
-                                self,
-                                res,
-                                "in {} {} removed {} from {:?}",
-                                group.name,
-                                ci,
-                                cell1.to_string(),
-                                p3
-                            );
+                            cell_change!(self, res, "in {} {} removed {} from {:?}", group.name, ci, cell1.to_string(), p3);
                         }
                     }
                     continue 'outer;

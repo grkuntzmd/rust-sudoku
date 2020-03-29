@@ -28,7 +28,8 @@ macro_rules! op_other {
 }
 
 use super::ALL_DIGITS;
-use std::ops::BitOr;
+use std::fmt;
+use std::ops;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Cell(pub u16);
@@ -72,7 +73,15 @@ impl Cell {
     op_other!(replace, self, other, self.0 = other.0);
 }
 
-impl BitOr for Cell {
+impl ops::BitAnd for Cell {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self {
+        Cell(self.0 & rhs.0)
+    }
+}
+
+impl ops::BitOr for Cell {
     type Output = Self;
 
     fn bitor(self, rhs: Self) -> Self {
@@ -80,14 +89,23 @@ impl BitOr for Cell {
     }
 }
 
-impl ToString for Cell {
-    fn to_string(&self) -> String {
+impl fmt::Display for Cell {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut d = Vec::<String>::new();
         for i in ALL_DIGITS {
             if self.0 & (1 << i) != 0 {
                 d.push(i.to_string());
             }
         }
-        d.join(", ")
+
+        write!(f, "{}", d.join(", "))
+    }
+}
+
+impl ops::Not for Cell {
+    type Output = Self;
+
+    fn not(self) -> Self {
+        Cell(!self.0)
     }
 }

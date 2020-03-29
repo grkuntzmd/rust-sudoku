@@ -14,13 +14,32 @@
  * limitations under the License.
  */
 
- pub mod box_line;
- pub mod hidden_pair;
- pub mod hidden_quad;
- pub mod hidden_single;
- pub mod hidden_triple;
- pub mod naked_pair;
- pub mod naked_single;
- pub mod naked_triple;
- pub mod pointing_line;
- pub mod x_wing;
+use super::{box_of, Point, BOX, COL, COLS, ROW, ROWS};
+
+pub mod box_line;
+pub mod hidden_pair;
+pub mod hidden_quad;
+pub mod hidden_single;
+pub mod hidden_triple;
+pub mod naked_pair;
+pub mod naked_single;
+pub mod naked_triple;
+pub mod pointing_line;
+pub mod x_wing;
+pub mod y_wing;
+
+fn neighbors(curr: &Point) -> [[bool; COLS]; ROWS] {
+    let mut points = [[false; COLS]; ROWS];
+
+    for u in vec![&BOX.cells[box_of(curr.0, curr.1)], &COL.cells[curr.1], &ROW.cells[curr.0]] {
+        for p in u {
+            if p == curr {
+                continue;
+            }
+
+            points[p.0][p.1] = true;
+        }
+    }
+
+    points
+}

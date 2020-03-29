@@ -48,7 +48,9 @@ macro_rules! cell_change {
 extern crate rand;
 
 use super::Level;
+use super::COLORIZE;
 use cell::{Cell, BIT_COUNT};
+use colored::control::set_override;
 use colored::Colorize;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
@@ -56,8 +58,8 @@ use std::collections::HashSet;
 use std::ops::RangeInclusive;
 use std::ops::{Index, IndexMut};
 
-mod strategies;
 mod cell;
+mod strategies;
 
 const ALL_DIGITS: RangeInclusive<usize> = RangeInclusive::new(1, 9);
 
@@ -84,10 +86,7 @@ lazy_static! {
             let p = (r, c);
             cells[box_of(r, c)][r % 3 * 3 + c % 3] = p;
         });
-        Group {
-            name: "box".to_string(),
-            cells,
-        }
+        Group { name: "box".to_string(), cells }
     };
     static ref COL: Group = {
         let mut cells = [[(0, 0); COLS]; ROWS];
@@ -95,10 +94,7 @@ lazy_static! {
             let p = (r, c);
             cells[c][r] = p;
         });
-        Group {
-            name: "col".to_string(),
-            cells,
-        }
+        Group { name: "col".to_string(), cells }
     };
     static ref ROW: Group = {
         let mut cells = [[(0, 0); ROWS]; COLS];
@@ -106,10 +102,7 @@ lazy_static! {
             let p = (r, c);
             cells[r][c] = p;
         });
-        Group {
-            name: "row".to_string(),
-            cells,
-        }
+        Group { name: "row".to_string(), cells }
     };
     static ref VISIBLE: [[u128; COLS]; ROWS] = {
         let mut m = [[0 as u128; COLS]; ROWS];
@@ -253,11 +246,13 @@ impl Grid {
 
     // display prints a game.
     pub fn display(&self) {
+        unsafe {
+            set_override(COLORIZE);
+        }
+
         let width = self.max_width() + 2;
         let bars = HORIZ_BAR.repeat((width * 3) as usize);
-        let line = LEFT_T.to_string()
-            + &[bars.as_str(), bars.as_str(), bars.as_str()].join(PLUS)
-            + RIGHT_T;
+        let line = LEFT_T.to_string() + &[bars.as_str(), bars.as_str(), bars.as_str()].join(PLUS) + RIGHT_T;
         print!("\t   ");
         for d in 0..9 {
             print!("{}", center(&d.to_string(), width).yellow());
@@ -266,10 +261,7 @@ impl Grid {
             }
         }
         println!();
-        println!(
-            "\t  {}{}{}{}{}{}{}",
-            TOP_LEFT, &bars, TOP_T, &bars, TOP_T, &bars, TOP_RIGHT
-        );
+        println!("\t  {}{}{}{}{}{}{}", TOP_LEFT, &bars, TOP_T, &bars, TOP_T, &bars, TOP_RIGHT);
         for r in 0..ROWS {
             print!("\t{} \u{2502}", r.to_string().yellow());
             for c in 0..COLS {
@@ -298,10 +290,7 @@ impl Grid {
                 println!("\t  {}", line);
             }
         }
-        println!(
-            "\t  {}{}{}{}{}{}{}",
-            BOT_LEFT, &bars, BOT_T, &bars, BOT_T, &bars, BOT_RIGHT
-        );
+        println!("\t  {}{}{}{}{}{}{}", BOT_LEFT, &bars, BOT_T, &bars, BOT_T, &bars, BOT_RIGHT);
     }
 
     // digit_places returns an array of digits containing values where the bits (1 - 9) are set if the corresponding digit appears in that cell.
@@ -375,10 +364,7 @@ impl Grid {
                 cells[r][c].0 |= 1 << digit;
             }
         });
-        Grid {
-            orig: orig,
-            cells: cells,
-        }
+        Grid { orig: orig, cells: cells }
     }
 
     // randomize generates a random grid.
@@ -393,10 +379,7 @@ impl Grid {
             index += 1;
         }
 
-        Grid {
-            orig: [[false; COLS]; ROWS],
-            cells,
-        }
+        Grid { orig: [[false; COLS]; ROWS], cells }
     }
 
     // reduce reduces all cells to the minimum number of candidates using only logical operations (no brute-froce search) and returns the highest level of operation used and a flag indicating if the puzzle is solved.
@@ -428,12 +411,7 @@ impl Grid {
             ) {
                 continue;
             }
-            if self.reduce_level(
-                &mut max_level,
-                &Level::Standard,
-                strategies,
-                vec![(Grid::x_wing, "x_wing")],
-            ) {
+            if self.reduce_level(&mut max_level, &Level::Standard, strategies, vec![(Grid::x_wing, "x_wing"), (Grid::y_wing, "y_wing")]) {
                 continue;
             }
             if self.reduce_level(&mut max_level, &Level::Hard, strategies, vec![]) {
@@ -451,13 +429,7 @@ impl Grid {
         (max_level, false)
     }
 
-    pub fn reduce_level(
-        &mut self,
-        max_level: &mut Level,
-        level: &Level,
-        strategies: &mut Option<&mut HashSet<&'static str>>,
-        fns: Vec<(fn(&mut Grid) -> bool, &'static str)>,
-    ) -> bool {
+    pub fn reduce_level(&mut self, max_level: &mut Level, level: &Level, strategies: &mut Option<&mut HashSet<&'static str>>, fns: Vec<(fn(&mut Grid) -> bool, &'static str)>) -> bool {
         for (f, n) in fns {
             if f(self) {
                 if let Some(s) = strategies {

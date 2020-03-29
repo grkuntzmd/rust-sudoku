@@ -14,9 +14,5 @@ fn main() {
         .map(|r| String::from(String::from_utf8_lossy(&r.stdout)))
         .expect("git hash not available");
 
-    println!(
-        "cargo:rustc-env=BUILD_TIMESTAMP={}\ncargo:rustc-env=GIT_HASH={}",
-        now.to_rfc2822(),
-        git_hash
-    );
+    println!("cargo:rustc-env=BUILD_TIMESTAMP={}\ncargo:rustc-env=GIT_HASH={}", now.to_rfc2822(), git_hash);
 }

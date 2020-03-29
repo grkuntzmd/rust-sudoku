@@ -21,9 +21,7 @@ use log::{info, log_enabled};
 impl Grid {
     // hidden_single solves a cell if it contains the only instance of a digit within its group (box, column, row) and returns true if it changes any cells.
     pub fn hidden_single(&mut self) -> bool {
-        self.hidden_single_group(&BOX)
-            || self.hidden_single_group(&COL)
-            || self.hidden_single_group(&ROW)
+        self.hidden_single_group(&BOX) || self.hidden_single_group(&COL) || self.hidden_single_group(&ROW)
     }
 
     fn hidden_single_group(&mut self, group: &Group) -> bool {

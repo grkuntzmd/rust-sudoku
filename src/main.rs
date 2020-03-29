@@ -37,6 +37,8 @@ pub enum Level {
     Extreme,
 }
 
+static mut COLORIZE: bool = false;
+
 fn main() {
     env_logger::init();
 
@@ -101,14 +103,8 @@ fn main() {
                 .takes_value(true)
                 .help("Number of attempts to generate a puzzle"),
         )
-        .after_help(
-            format!(
-                "build timestamp: {}\ngit hash: {}",
-                env!("BUILD_TIMESTAMP"),
-                env!("GIT_HASH")
-            )
-            .as_str(),
-        )
+        .arg(Arg::with_name("colorize").short("c").long("colorize").help("Colorize the output using ANDI escapes"))
+        .after_help(format!("build timestamp: {}\ngit hash: {}", env!("BUILD_TIMESTAMP"), env!("GIT_HASH")).as_str())
         .get_matches();
 
     let level_0_count = value_t!(matches, "level0", u32).unwrap_or(0);
@@ -118,6 +114,9 @@ fn main() {
     // let level_4_count = value_t!(matches, "level4", u32).unwrap_or(0);
     let inputs = values_t!(matches, "inputs", String).unwrap_or_else(|_e| Vec::new());
     let max_attempts = value_t!(matches, "attempts", u32).unwrap_or(100);
+    unsafe {
+        COLORIZE = matches.is_present("colorize");
+    }
 
     if inputs.len() > 0 {
         // Handle -i files.
@@ -188,15 +187,12 @@ fn main() {
         }
         // for _ in 0..level_4_count { tasks.push(Level::Extreme)}
 
-        tasks
-            .par_iter()
-            .map(|l| Grid::generate(l, &max_attempts))
-            .for_each(|maybe_game| {
-                if let Some(game) = maybe_game {
-                    println!("{:?} ({}) {:?}", game.level, game.clues, game.strategies);
-                    game.puzzle.display();
-                    game.solution.display();
-                }
-            });
+        tasks.par_iter().map(|l| Grid::generate(l, &max_attempts)).for_each(|maybe_game| {
+            if let Some(game) = maybe_game {
+                println!("{:?} ({}) {:?}", game.level, game.clues, game.strategies);
+                game.puzzle.display();
+                game.solution.display();
+            }
+        });
     }
 }

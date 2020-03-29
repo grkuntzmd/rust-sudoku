@@ -21,9 +21,7 @@ use log::{info, log_enabled};
 impl Grid {
     // naked_triple checks a group for 3 cells with the same triple of values. If present, those values can be removed from all other cells in the group. It returns true if it changes any cells.
     pub fn naked_triple(&mut self) -> bool {
-        self.naked_triple_group(&BOX)
-            || self.naked_triple_group(&COL)
-            || self.naked_triple_group(&ROW)
+        self.naked_triple_group(&BOX) || self.naked_triple_group(&COL) || self.naked_triple_group(&ROW)
     }
 
     fn naked_triple_group(&mut self, group: &Group) -> bool {
@@ -72,18 +70,7 @@ impl Grid {
                             }
 
                             if self[p].and_not(&comb) {
-                                cell_change!(
-                                    self,
-                                    res,
-                                    "in {} {} ({:?}, {:?}, {:?}) removing {} from {:?}",
-                                    group.name,
-                                    ci,
-                                    p1,
-                                    p2,
-                                    p3,
-                                    comb.to_string(),
-                                    p
-                                );
+                                cell_change!(self, res, "in {} {} ({:?}, {:?}, {:?}) removing {} from {:?}", group.name, ci, p1, p2, p3, comb.to_string(), p);
                             }
                         }
                     }

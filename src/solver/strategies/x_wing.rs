@@ -55,7 +55,18 @@ impl Grid {
                                     }
 
                                     if self[m].and_not(&Cell(1 << d)) {
-                                        cell_change!(self, res, "in {}s {} and {}, {} appears only in {} {} and 1 other; removing from {:?}", major_group.name, c1i, c2i, d, minor_group.name, minor, m);
+                                        cell_change!(
+                                            self,
+                                            res,
+                                            "in {}s {} and {}, {} appears only in {} {} and 1 other; removing from {:?}",
+                                            major_group.name,
+                                            c1i,
+                                            c2i,
+                                            d,
+                                            minor_group.name,
+                                            minor,
+                                            m
+                                        );
                                     }
                                 }
                             }

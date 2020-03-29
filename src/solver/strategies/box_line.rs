@@ -24,17 +24,10 @@ impl Grid {
         let col = |p: &Point| p.1;
         let row = |p: &Point| p.0;
 
-        self.box_line_group(&COL, col, row, |i, c| i * 3 + c / 3)
-            || self.box_line_group(&ROW, row, col, |i, r| r / 3 * 3 + i)
+        self.box_line_group(&COL, col, row, |i, c| i * 3 + c / 3) || self.box_line_group(&ROW, row, col, |i, r| r / 3 * 3 + i)
     }
 
-    fn box_line_group(
-        &mut self,
-        group: &Group,
-        major: fn(&Point) -> usize,
-        minor: fn(&Point) -> usize,
-        box_sel: fn(usize, usize) -> usize,
-    ) -> bool {
+    fn box_line_group(&mut self, group: &Group, major: fn(&Point) -> usize, minor: fn(&Point) -> usize, box_sel: fn(usize, usize) -> usize) -> bool {
         group_loop!(self, res, group, ci, c, {
             let mut boxes = [[false; 3]; 10];
             for p in c {
@@ -64,16 +57,7 @@ impl Grid {
                     }
 
                     if self[&p].and_not(&Cell(1 << d)) {
-                        cell_change!(
-                            self,
-                            res,
-                            "all {}'s in {} {} appear in box {} removing from {:?}",
-                            d,
-                            group.name,
-                            ci,
-                            box_sel(index, ci),
-                            p
-                        );
+                        cell_change!(self, res, "all {}'s in {} {} appear in box {} removing from {:?}", d, group.name, ci, box_sel(index, ci), p);
                     }
                 }
             }

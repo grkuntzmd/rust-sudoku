@@ -21,16 +21,10 @@ use log::{info, log_enabled};
 impl Grid {
     // hidden_triple removes candidates. When a candidate within a box appears only in a single column or row, that candidate can be removed from all cells in the column or row outside of the box. It returns true if it changes any cells.
     pub fn pointing_line(&mut self) -> bool {
-        self.pointing_line_group("col", |p| COL.cells[p.1], |p| p.1)
-            || self.pointing_line_group("row", |p| ROW.cells[p.0], |p| p.0)
+        self.pointing_line_group("col", |p| COL.cells[p.1], |p| p.1) || self.pointing_line_group("row", |p| ROW.cells[p.0], |p| p.0)
     }
 
-    fn pointing_line_group(
-        &mut self,
-        group: &str,
-        sel: fn(&Point) -> [Point; 9],
-        axis: fn(&Point) -> usize,
-    ) -> bool {
+    fn pointing_line_group(&mut self, group: &str, sel: fn(&Point) -> [Point; 9], axis: fn(&Point) -> usize) -> bool {
         let mut res = false;
         for (bi, b) in BOX.cells.iter().enumerate() {
             let points = self.digit_points(b);
@@ -53,15 +47,7 @@ impl Grid {
                     }
 
                     if self[p].and_not(&Cell(1 << d)) {
-                        cell_change!(
-                            self,
-                            res,
-                            "in box {} removing {} from {:?} along {}",
-                            bi,
-                            d,
-                            p,
-                            group
-                        );
+                        cell_change!(self, res, "in box {} removing {} from {:?} along {}", bi, d, p, group);
                     }
                 }
             }

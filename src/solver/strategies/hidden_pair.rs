@@ -39,15 +39,7 @@ impl Grid {
                         for k in 0..2 {
                             let p = points[i1][k];
                             if self[&p].and(&comb) {
-                                cell_change!(
-                                    self,
-                                    res,
-                                    "in {} {} limits {:?} to {}",
-                                    group.name,
-                                    ci,
-                                    p,
-                                    comb.to_string()
-                                );
+                                cell_change!(self, res, "in {} {} limits {:?} to {}", group.name, ci, p, comb.to_string());
                             }
                         }
                     }

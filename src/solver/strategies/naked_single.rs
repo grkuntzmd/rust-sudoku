@@ -21,9 +21,7 @@ use log::{info, log_enabled};
 impl Grid {
     // naked_single removes digits from other items in a group (box, column, row) when a cell contains a solved value and returns true if it changes any cells.
     pub fn naked_single(&mut self) -> bool {
-        self.naked_single_group(&BOX)
-            || self.naked_single_group(&COL)
-            || self.naked_single_group(&ROW)
+        self.naked_single_group(&BOX) || self.naked_single_group(&COL) || self.naked_single_group(&ROW)
     }
 
     fn naked_single_group(&mut self, group: &Group) -> bool {
@@ -40,16 +38,7 @@ impl Grid {
                     }
 
                     if self[p2].and_not(&cell) {
-                        cell_change!(
-                            self,
-                            res,
-                            "in {} {} cell {:?} allows only {}, removed from {:?}",
-                            group.name,
-                            ci,
-                            p1,
-                            cell.to_string(),
-                            p2
-                        );
+                        cell_change!(self, res, "in {} {} cell {:?} allows only {}, removed from {:?}", group.name, ci, p1, cell.to_string(), p2);
                     }
                 }
             }
