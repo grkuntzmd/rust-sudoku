@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use super::{Grid, Group, BOX, COL, ROW};
+use super::super::{Grid, Group, BOX, COL, ROW};
 use log::Level;
 use log::{info, log_enabled};
 
@@ -40,7 +40,16 @@ impl Grid {
                     }
 
                     if self[p2].and_not(&cell) {
-                        cell_change!(self, res, "in {} {} cell {:?} allows only {}, removed from {:?}", group.name, ci, p1, cell.to_string(), p2);
+                        cell_change!(
+                            self,
+                            res,
+                            "in {} {} cell {:?} allows only {}, removed from {:?}",
+                            group.name,
+                            ci,
+                            p1,
+                            cell.to_string(),
+                            p2
+                        );
                     }
                 }
             }

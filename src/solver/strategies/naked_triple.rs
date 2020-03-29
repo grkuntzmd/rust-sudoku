@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use super::{Grid, Group, BOX, COL, ROW};
+use super::super::{Grid, Group, BOX, COL, ROW};
 use log::Level;
 use log::{info, log_enabled};
 
@@ -72,7 +72,18 @@ impl Grid {
                             }
 
                             if self[p].and_not(&comb) {
-                                cell_change!(self, res, "in {} {} ({:?}, {:?}, {:?}) removing {} from {:?}", group.name, ci, p1, p2, p3, comb.to_string(), p);
+                                cell_change!(
+                                    self,
+                                    res,
+                                    "in {} {} ({:?}, {:?}, {:?}) removing {} from {:?}",
+                                    group.name,
+                                    ci,
+                                    p1,
+                                    p2,
+                                    p3,
+                                    comb.to_string(),
+                                    p
+                                );
                             }
                         }
                     }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use super::{Cell, Grid, Group, ALL_DIGITS, COL, ROW};
+use super::super::{Cell, Grid, Group, ALL_DIGITS, COL, ROW};
 use log::Level;
 use log::{info, log_enabled};
 

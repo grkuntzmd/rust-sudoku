@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use super::{Cell, Grid, Group, Point, ALL_DIGITS, BOX, COL, ROW};
+use super::super::{Cell, Grid, Group, Point, ALL_DIGITS, BOX, COL, ROW};
 use log::Level;
 use log::{info, log_enabled};
 
@@ -64,7 +64,16 @@ impl Grid {
                     }
 
                     if self[&p].and_not(&Cell(1 << d)) {
-                        cell_change!(self, res, "all {}'s in {} {} appear in box {} removing from {:?}", d, group.name, ci, box_sel(index, ci), p);
+                        cell_change!(
+                            self,
+                            res,
+                            "all {}'s in {} {} appear in box {} removing from {:?}",
+                            d,
+                            group.name,
+                            ci,
+                            box_sel(index, ci),
+                            p
+                        );
                     }
                 }
             }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use super::{count, Cell, Grid, Group, ALL_DIGITS, BOX, COL, ROW};
+use super::super::{count, Cell, Grid, Group, ALL_DIGITS, BOX, COL, ROW};
 use log::Level;
 use log::{info, log_enabled};
 
@@ -64,7 +64,15 @@ impl Grid {
                         for (pi, p) in c.iter().enumerate() {
                             if comb & (1 << pi) != 0 {
                                 if self[p].and(&bits) {
-                                    cell_change!(self, res, "in {} {} limits {:?} to {}", group.name, ci, p, bits.to_string());
+                                    cell_change!(
+                                        self,
+                                        res,
+                                        "in {} {} limits {:?} to {}",
+                                        group.name,
+                                        ci,
+                                        p,
+                                        bits.to_string()
+                                    );
                                 }
                             }
                         }

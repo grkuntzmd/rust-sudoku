@@ -55,19 +55,9 @@ use rand::{thread_rng, Rng};
 use std::collections::HashSet;
 use std::ops::RangeInclusive;
 use std::ops::{Index, IndexMut};
-// use super::super::COLORIZE;
 
-mod box_line;
+mod strategies;
 mod cell;
-mod hidden_pair;
-mod hidden_quad;
-mod hidden_single;
-mod hidden_triple;
-mod naked_pair;
-mod naked_single;
-mod naked_triple;
-mod pointing_line;
-mod x_wing;
 
 const ALL_DIGITS: RangeInclusive<usize> = RangeInclusive::new(1, 9);
 
@@ -89,10 +79,6 @@ const VERT_BAR: &str = "\u{2502}";
 
 lazy_static! {
     static ref BOX: Group = {
-        fn box_of(r: usize, c: usize) -> usize {
-            r / 3 * 3 + c / 3
-        }
-
         let mut cells = [[(0, 0); COLS]; ROWS];
         for_all_cells!(r, c, {
             let p = (r, c);
@@ -124,6 +110,30 @@ lazy_static! {
             name: "row".to_string(),
             cells,
         }
+    };
+    static ref VISIBLE: [[u128; COLS]; ROWS] = {
+        let mut m = [[0 as u128; COLS]; ROWS];
+        for_all_cells!(r, c, {
+            for p in &BOX.cells[box_of(r, c)] {
+                if r == p.0 && c == p.1 {
+                    continue;
+                }
+                m[r][c] |= 1 << (p.0 * 9 + p.1) as u128;
+            }
+            for p in &COL.cells[c] {
+                if r == p.0 && c == p.1 {
+                    continue;
+                }
+                m[r][c] |= 1 << (p.0 * 9 + p.1) as u128;
+            }
+            for p in &ROW.cells[r] {
+                if r == p.0 && c == p.1 {
+                    continue;
+                }
+                m[r][c] |= 1 << (p.0 * 9 + p.1) as u128;
+            }
+        });
+        m
     };
 }
 
@@ -572,6 +582,11 @@ impl IndexMut<&Point> for Grid {
     fn index_mut<'a>(&'a mut self, p: &Point) -> &mut Cell {
         &mut self.cells[p.0][p.1]
     }
+}
+
+// box_of gets the box number of a point.
+fn box_of(r: usize, c: usize) -> usize {
+    r / 3 * 3 + c / 3
 }
 
 // center centers a string in a field of the given size.
